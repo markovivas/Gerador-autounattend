@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Gerador de Autounattend</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='1' y='1' width='46' height='46' rx='11' fill='%232b7de9'/%3E%3Cpath d='M11 8h17l8 8v22H11z' fill='white'/%3E%3Cpath d='M17 22l-4 5 4 5M27 22l4 5-4 5' stroke='%232b7de9' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='35' r='9' fill='%23185cc4' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M34 28.5l2 4.8 5 .2-4 3.2 1.4 5-4.4-2.9-4.4 2.9 1.4-5-4-3.2 5-.2z' fill='%23ffc83d'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#eef5fd; --panel:#ffffff; --surface:#ffffff; --line:#d6e4f5; --line2:#e6eff9;
+  --ink:#16324f; --muted:#5d7690; --blue:#2b7de9; --blue-d:#1a5fc0; --blue-l:#e3effd; --blue-xl:#f3f8fe;
+  --pri:#2b7de9; --pri-d:#1a5fc0;
+  --ok:#17a673; --warn:#c77700; --warn-bg:#fff6e3; --warn-line:#f0d9a6; --warn-ink:#7a4b00;
+  --bad:#d23b3b; --bad-bg:#fdeded; --bad-line:#f0c2c2; --bad-ink:#8a1f1f;
+  --hd1:#fafdff; --hd2:#f1f7fe; --head:linear-gradient(100deg,#ffffff 0%,#eaf3ff 60%,#d9ebff 100%);
+  --shadow:0 1px 2px rgba(22,50,79,.06),0 4px 14px rgba(43,125,233,.07);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0b1522; --panel:#122238; --surface:#122238; --line:#27425f; --line2:#1d3550;
+  --ink:#e4eefb; --muted:#92abc6; --blue:#4f9dff; --blue-d:#8cc0ff; --blue-l:#17324f; --blue-xl:#0f2236;
+  --pri:#2b7de9; --pri-d:#4a93f2;
+  --warn:#f0b050; --warn-bg:#33290f; --warn-line:#5a4617; --warn-ink:#f3cf8a;
+  --bad:#ff8080; --bad-bg:#3a1a1e; --bad-line:#6a2b31; --bad-ink:#ffb3b3;
+  --hd1:#17304d; --hd2:#132a44; --head:linear-gradient(100deg,#10223a 0%,#12294a 60%,#15335c 100%);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--head);border-bottom:1px solid var(--line);padding:9px 18px;display:flex;align-items:center;gap:12px;flex:0 0 auto;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:11px;min-width:0}
+.logo svg{width:42px;height:42px;flex:0 0 auto}
+.logo b{display:block;font-size:17px;letter-spacing:.2px}
+.logo .sub2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.by{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,#ffe08a,#ffc83d);color:#5a3b00;border-radius:99px;padding:1px 10px 1px 7px;font-weight:700;font-size:12px;text-decoration:none;border:1px solid #e3a928}
+.by:hover{filter:brightness(1.05)}
+.by svg{width:13px;height:13px}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 13px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{border-color:var(--blue);background:var(--blue-xl)}
+.btn:focus-visible,.nav button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.by:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.btn.pri:hover{background:var(--pri-d);border-color:var(--pri-d)}
+.btn.dng{border-color:var(--bad-line);color:var(--bad)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.ic{padding:7px 10px}
+.btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+select.btn{padding-right:8px}
+.main{flex:1;display:flex;min-height:0}
+nav.nav{width:218px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);padding:12px 10px;overflow:auto}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;border-radius:9px;padding:9px 11px;margin-bottom:3px;cursor:pointer;color:var(--ink)}
+.nav button:hover{background:var(--blue-xl)}
+.nav button.on{background:var(--blue-l);color:var(--blue-d);font-weight:600}
+.nav svg{width:18px;height:18px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav .cnt{margin-left:auto;font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:0 7px;font-weight:600}
+.nav hr{border:0;border-top:1px solid var(--line2);margin:10px 4px}
+.nav .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:6px 11px}
+.content{flex:1;overflow:auto;padding:18px 22px 30px}
+.wrap{max-width:980px;margin:0 auto}
+h2{margin:2px 0 4px;font-size:21px}
+.lead{color:var(--muted);margin:0 0 14px}
+.search{position:relative;margin-bottom:14px}
+.search input{width:100%;padding:9px 12px 9px 36px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.search svg{position:absolute;left:11px;top:10px;width:17px;height:17px;stroke:var(--muted);fill:none;stroke-width:2}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.card>.hd{display:flex;align-items:center;gap:10px;padding:11px 14px;background:linear-gradient(180deg,var(--hd1),var(--hd2));border-bottom:1px solid var(--line2)}
+.card>.hd h3{margin:0;font-size:15px}
+.card>.hd .d{color:var(--muted);font-size:12.5px}
+.card>.hd .tg{cursor:pointer;flex:1;min-width:0}
+.card>.hd input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue)}
+.card>.bd{padding:6px 14px 12px}
+.card.col>.bd{display:none}
+.chev{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;transition:.15s;flex:0 0 auto;cursor:pointer}
+.card.col .chev{transform:rotate(-90deg)}
+.badge{font-size:11px;border-radius:99px;padding:1px 8px;background:var(--blue-l);color:var(--blue-d);white-space:nowrap}
+.badge.w{background:var(--warn-bg);color:var(--warn)}
+.row{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px dashed var(--line2)}
+.row:last-child{border-bottom:0}
+.row.dis{opacity:.5}
+.row input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto}
+.row .t{flex:1;min-width:0}
+.row label{cursor:pointer;display:block}
+.row .s{display:block;color:var(--muted);font-size:12px;font-family:Consolas,monospace;word-break:break-all}
+.row .r{display:block;font-size:12px;color:var(--warn);margin-top:1px}
+.row.risk label::before{content:"⚠ ";color:var(--warn)}
+.sub{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:10px 4px 2px}
+.note{background:var(--blue-xl);border:1px solid var(--line);border-radius:9px;padding:8px 12px;margin:8px 0;color:var(--muted);font-size:13px}
+.note.w{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+.note.b{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad-ink)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;padding:8px 2px}
+@media(max-width:900px){.fgrid{grid-template-columns:1fr}nav.nav{width:170px}}
+.f label.k{display:block;font-weight:600;margin-bottom:3px}
+.f .h{color:var(--muted);font-size:12px;margin-top:3px}
+.f input[type=text],.f input[type=password],.f input[type=number],.f select,.f textarea{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.f textarea{font-family:Consolas,monospace;font-size:12.5px;min-height:150px;resize:vertical}
+.f.full{grid-column:1/-1}
+.f .pw{display:flex;gap:6px}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:5px 2px}
+.chk input{margin-top:3px;width:16px;height:16px;accent-color:var(--blue)}
+.chk .h{color:var(--muted);font-size:12px;display:block}
+.chk.danger label{color:var(--bad);font-weight:600}
+footer{flex:0 0 auto;background:var(--surface);border-top:1px solid var(--line);padding:9px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chip{background:var(--blue-l);color:var(--blue-d);border-radius:99px;padding:2px 10px;font-size:12.5px}
+.chip.w{background:var(--warn-bg);color:var(--warn);cursor:pointer}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.modal{position:fixed;inset:0;background:rgba(5,15,30,.55);display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
+.modal.on{display:flex}
+.box{background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(980px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line)}
+.box.sm{width:min(520px,100%)}
+.box .mh{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--blue-xl)}
+.box .mh h3{margin:0;flex:1}
+.box .mb{padding:14px 16px;overflow:auto;flex:1}
+.box .mf{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.box pre{margin:0;font:12px/1.4 Consolas,monospace;white-space:pre;overflow:auto;background:#0f2238;color:#d8e8fb;padding:12px;border-radius:8px;max-height:62vh}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#16324f;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:20;max-width:80vw;box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid #3d6490}
+.toast.on{display:flex;gap:12px;align-items:center}
+.toast.err{background:#b53030;border-color:#d96a6a}
+.toast a{color:#a9d4ff;cursor:pointer;text-decoration:underline}
+ul.w{margin:6px 0 0 18px;padding:0}
+.hide{display:none!important}
+.menu{position:relative}
+.menu>.dd{position:absolute;right:0;top:110%;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);min-width:250px;display:none;z-index:5;padding:5px}
+.menu.on>.dd{display:block}
+.dd button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:7px;cursor:pointer}
+.dd button:hover{background:var(--blue-l)}
+.dd small{display:block;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cb2ff"/><stop offset="1" stop-color="#1658ba"/></linearGradient></defs>
+      <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="url(#g)"/>
+      <path d="M10 7h18l9 9v26H10z" fill="#fff"/><path d="M28 7l9 9H28z" fill="#c4defc"/>
+      <path d="M17.5 21.5 14 26l3.5 4.5M26.5 21.5 30 26l-3.5 4.5" stroke="#2b7de9" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M23.5 20.5 21 31" stroke="#16b4d8" stroke-width="2.3" stroke-linecap="round"/>
+      <circle cx="34.5" cy="35" r="10.5" fill="#fff"/><circle cx="34.5" cy="35" r="9.5" fill="#185cc4"/>
+      <path d="M34.5 27.5l2.3 5.1 5.4.1-4.3 3.4 1.6 5.3-5-3.2-5 3.2 1.6-5.3-4.3-3.4 5.4-.1z" fill="#ffc83d" stroke="#d69208" stroke-width=".7" stroke-linejoin="round"/></svg>
+    <div>
+      <b data-i="Gerador de Autounattend">Gerador de Autounattend</b>
+      <div style="font-size:11px;color:var(--muted)">autounattend.xml Windows 10 / 11 <span id="ver"></span></div>
+    </div>
+  </div>
+  <div class="sp"></div>
+  <select id="preset" class="btn" data-iaria="Perfis rápidos">
+    <option value="" data-i="Perfis rápidos…">Perfis rápidos…</option>
+    <option value="full" data-i="Completo (igual ao arquivo original)">Completo (igual ao arquivo original)</option>
+    <option value="safe" data-i="Conservador (mantém Edge, Store, UAC…)">Conservador (mantém Edge, Store, UAC…)</option>
+    <option value="setup" data-i="Somente instalação (sem ajustes)">Somente instalação (sem ajustes)</option>
+  </select>
+  <div class="menu" id="pmenu">
+    <button class="btn" id="pbtn"><span data-i="Perfil">Perfil</span> ▾</button>
+    <div class="dd">
+      <button id="psave"><span data-i="Salvar configuração…">Salvar configuração…</span><small data-i="Grava um arquivo .json com suas escolhas">Grava um arquivo .json com suas escolhas</small></button>
+      <button id="pload"><span data-i="Abrir configuração…">Abrir configuração…</span><small data-i="Carrega um .json salvo antes">Carrega um .json salvo antes</small></button>
+    </div>
+  </div>
+  <select id="lang" class="btn" data-iaria="Idioma" title="Idioma / Language / Idioma">
+    <option value="pt">Português</option><option value="en">English</option><option value="es">Español</option>
+  </select>
+  <button class="btn ic" id="theme" data-iaria="Alternar modo claro/escuro" data-ititle="Alternar modo claro/escuro"></button>
+  <button class="btn" id="quit" data-ititle="Fechar o programa" data-i="Sair">Sair</button>
+</header>
+<div class="main">
+  <nav class="nav" id="nav"></nav>
+  <div class="content" id="content"><div class="wrap" id="wrap">…</div></div>
+</div>
+<footer>
+  <span class="chip" id="st1">—</span>
+  <span class="chip" id="st2">—</span>
+  <span class="chip w hide" id="stw"></span>
+  <span class="sp"></span>
+  <button class="btn" id="bprev" data-i="Visualizar XML">Visualizar XML</button>
+  <button class="btn" id="bcopy" data-i="Copiar">Copiar</button>
+  <button class="btn pri" id="bsave" data-i="Gerar e salvar autounattend.xml">Gerar e salvar autounattend.xml</button>
+</footer>
+
+<div class="modal" id="mprev"><div class="box">
+  <div class="mh"><h3 data-i="Pré-visualização do XML">Pré-visualização do XML</h3><span class="badge" id="pinfo"></span><button class="btn sm" id="pclose" data-i="Fechar">Fechar</button></div>
+  <div class="mb"><pre id="pre"></pre></div>
+  <div class="mf"><button class="btn" id="pcopy" data-i="Copiar">Copiar</button><button class="btn pri" id="psave2" data-i="Salvar como…">Salvar como…</button></div>
+</div></div>
+
+<div class="modal" id="mwarn"><div class="box sm">
+  <div class="mh"><h3 data-i="Avisos antes de salvar">Avisos antes de salvar</h3></div>
+  <div class="mb"><ul class="w" id="wlist"></ul>
+  <p style="color:var(--muted);margin:12px 0 0" id="wtip"></p></div>
+  <div class="mf"><button class="btn" id="wno" data-i="Voltar">Voltar</button><button class="btn pri" id="wyes" data-i="Salvar mesmo assim">Salvar mesmo assim</button></div>
+</div></div>
+
+<div class="modal" id="mwipe"><div class="box sm">
+  <div class="mh"><h3 style="color:var(--bad)" data-i="⚠ Apagar disco automaticamente">⚠ Apagar disco automaticamente</h3></div>
+  <div class="mb">
+    <p id="wipetxt"></p>
+    <p id="wipeask"></p>
+    <input type="text" id="wipein" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)">
+  </div>
+  <div class="mf"><button class="btn" id="wipeno" data-i="Cancelar">Cancelar</button><button class="btn dng" id="wipeyes" disabled data-i="Ativar">Ativar</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const TOKEN = "__TOKEN__";
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (t, a, ...k) => { const e = document.createElement(t); if (a) for (const [x, v] of Object.entries(a)) { if (x === "class") e.className = v; else if (x === "text") e.textContent = v; else if (x.startsWith("on")) e.addEventListener(x.slice(2), v); else if (v !== false && v != null) e.setAttribute(x, v === true ? "" : v); } for (const c of k.flat()) if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
+
+async function api(path, body, keepalive) {
+  const r = await fetch(path, { method: "POST", headers: { "X-Token": TOKEN, "Content-Type": "application/json" }, body: JSON.stringify(body || {}), keepalive: !!keepalive });
+  let j = null; try { j = await r.json(); } catch (e) {}
+  return { status: r.status, ok: r.ok, data: j };
+}
+
+// ------------------------------------------------------------ idiomas (a chave é o texto em português)
+const D = {
+en: {
+"Gerador de Autounattend": "Autounattend Generator",
+"autounattend.xml do Windows 10 / 11": "Windows 10 / 11 autounattend.xml",
+"Perfis rápidos": "Quick profiles",
+"Perfis rápidos…": "Quick profiles…",
+"Completo (igual ao arquivo original)": "Full (same as the original file)",
+"Conservador (mantém Edge, Store, UAC…)": "Conservative (keeps Edge, Store, UAC…)",
+"Somente instalação (sem ajustes)": "Setup only (no tweaks)",
+"Perfil": "Profile",
+"Salvar configuração…": "Save configuration…",
+"Grava um arquivo .json com suas escolhas": "Writes a .json file with your choices",
+"Abrir configuração…": "Open configuration…",
+"Carrega um .json salvo antes": "Loads a previously saved .json",
+"Idioma": "Language",
+"Alternar modo claro/escuro": "Switch light/dark mode",
+"Fechar o programa": "Close the program",
+"Sair": "Exit",
+"Visualizar XML": "Preview XML",
+"Copiar": "Copy",
+"Gerar e salvar autounattend.xml": "Generate and save autounattend.xml",
+"Pré-visualização do XML": "XML preview",
+"Fechar": "Close",
+"Salvar como…": "Save as…",
+"Avisos antes de salvar": "Warnings before saving",
+"Voltar": "Back",
+"Salvar mesmo assim": "Save anyway",
+"⚠ Apagar disco automaticamente": "⚠ Erase disk automatically",
+"Cancelar": "Cancel",
+"Ativar": "Enable",
+"APAGAR": "ERASE",
+"Com esta opção a instalação apaga todo o disco escolhido sem perguntar nada. Todos os dados dele serão perdidos. Use somente em computadores que podem ser formatados.": "With this option, setup erases the whole chosen disk without asking anything. All its data will be lost. Use only on computers that can be wiped.",
+"Para confirmar, digite {w}:": "To confirm, type {w}:",
+"Salve o arquivo como autounattend.xml na raiz do pendrive de instalação (junto da pasta sources).": "Save the file as autounattend.xml in the root of the installation USB drive (next to the sources folder).",
+"Configuração": "Configuration",
+"Ajustes do Windows": "Windows tweaks",
+"{n} item(ns) desligado(s)": "{n} item(s) turned off",
+"Como o instalador do Windows vai se comportar. Os valores iniciais reproduzem o arquivo original.": "How the Windows installer will behave. The initial values reproduce the original file.",
+"Identificação do computador, idioma, fuso e conta de usuário.": "Computer identity, language, time zone and user account.",
+"Para quem quer acrescentar os próprios comandos ao arquivo gerado.": "For those who want to add their own commands to the generated file.",
+"⚠ Apagar disco automaticamente está ATIVO: a instalação formatará o disco {n} sem perguntar.": "⚠ Erase disk automatically is ON: setup will format disk {n} without asking.",
+"O que será removido do Windows durante a instalação.": "What will be removed from Windows during setup.",
+"Plano de energia personalizado para desempenho.": "Custom power plan for performance.",
+"Ajustes de desempenho, serviços e tarefas agendadas.": "Performance tweaks, services and scheduled tasks.",
+"Telemetria, privacidade, segurança e atualizações.": "Telemetry, privacy, security and updates.",
+"Aparência do Explorador, Menu Iniciar e barra de tarefas.": "File Explorer, Start menu and taskbar appearance.",
+"Ajustes aplicados ao perfil do usuário no primeiro logon.": "Tweaks applied to the user profile at first logon.",
+"Marcado = será aplicado. Desmarque o que você NÃO quer aplicar.": "Checked = will be applied. Uncheck what you do NOT want applied.",
+"Resultados da busca": "Search results",
+"Buscar em todos os ajustes (ex.: telemetria, Xbox, OneDrive, UAC…)": "Search all tweaks (e.g. telemetry, Xbox, OneDrive, UAC…)",
+"Buscar ajustes": "Search tweaks",
+"Nada encontrado.": "Nothing found.",
+"O script de ajustes está desligado na aba Instalação — nada desta página será aplicado.": "The tweaks script is off in the Setup tab — nothing on this page will be applied.",
+"Estes itens não terão efeito porque o item \"{n}\" está desligado.": "These items will have no effect because \"{n}\" is turned off.",
+"Sistema (todos os usuários — HKLM)": "System (all users — HKLM)",
+"Usuário (primeiro logon — HKCU)": "User (first logon — HKCU)",
+"Marcar/desmarcar todos": "Check/uncheck all",
+"Marcar ou desmarcar todos de {n}": "Check or uncheck all of {n}",
+"Não definir": "Do not set",
+"Mostrar": "Show", "Ocultar": "Hide",
+"Requisitos do Windows 11": "Windows 11 requirements",
+"Permite instalar em computadores que não atendem aos requisitos oficiais.": "Allows installing on computers that do not meet the official requirements.",
+"Ignorar verificação de TPM 2.0": "Skip the TPM 2.0 check",
+"Ignorar verificação de Secure Boot": "Skip the Secure Boot check",
+"Ignorar verificação de armazenamento": "Skip the storage check",
+"Ignorar verificação de processador": "Skip the processor check",
+"Ignorar verificação de memória RAM": "Skip the RAM check",
+"Ignorar verificação de disco": "Skip the disk check",
+"Chave e edição": "Key and edition",
+"A chave genérica 00000-… faz o instalador não perguntar a chave; o Windows ativa depois por licença digital ou chave própria.": "The generic 00000-… key makes the installer skip the key prompt; Windows is activated later by digital license or your own key.",
+"Chave do produto": "Product key",
+"Formato XXXXX-XXXXX-XXXXX-XXXXX-XXXXX. Deixe em branco para não gravar chave.": "Format XXXXX-XXXXX-XXXXX-XXXXX-XXXXX. Leave blank to not write a key.",
+"Mostrar a escolha de edição (Home, Pro…) durante a instalação": "Show the edition choice (Home, Pro…) during setup",
+"Gravar PID.txt para o instalador (amd64)": "Write PID.txt for the installer (amd64)",
+"Faz o instalador usar a chave sem perguntar.": "Makes the installer use the key without asking.",
+"Disco": "Disk",
+"Por padrão o instalador pergunta onde instalar. Ative só se quiser instalação totalmente sem perguntas.": "By default the installer asks where to install. Enable only for a fully unattended install.",
+"Apagar e particionar o disco automaticamente": "Erase and partition the disk automatically",
+"PERIGO: todos os dados do disco escolhido são apagados sem confirmação.": "DANGER: all data on the chosen disk is erased without confirmation.",
+"Número do disco": "Disk number",
+"Normalmente 0 (primeiro disco). Confira no Gerenciamento de Disco.": "Usually 0 (first disk). Check in Disk Management.",
+"Tipo de firmware": "Firmware type",
+"UEFI / GPT (computadores modernos)": "UEFI / GPT (modern computers)",
+"BIOS legado / MBR": "Legacy BIOS / MBR",
+"Durante a instalação (specialize)": "During setup (specialize)",
+"Comandos executados antes do primeiro logon.": "Commands run before the first logon.",
+"Executar o script de ajustes do Windows (Winhancements.ps1)": "Run the Windows tweaks script (Winhancements.ps1)",
+"Desligado = nenhuma remoção de apps/ajuste de registro. As abas de ajustes ficam sem efeito.": "Off = no app removal or registry tweaks. The tweak tabs have no effect.",
+"Permitir criar conta local no OOBE (BypassNRO)": "Allow creating a local account in OOBE (BypassNRO)",
+"Desativar adaptadores de rede temporariamente durante o OOBE": "Temporarily disable network adapters during OOBE",
+"Evita atualizações no meio da instalação e permite conta local.": "Avoids updates in the middle of setup and allows a local account.",
+"Ativar .NET Framework 3.5 a partir da mídia de instalação": "Enable .NET Framework 3.5 from the installation media",
+"Procura a pasta sources\\sxs nas unidades C: a K:.": "Looks for the sources\\sxs folder on drives C: to K:.",
+"Tela inicial de configuração (OOBE)": "Out-of-box experience (OOBE)",
+"Páginas que serão puladas na primeira inicialização.": "Pages that will be skipped on first boot.",
+"Pular o contrato de licença (EULA)": "Skip the license agreement (EULA)",
+"Pular o registro do fabricante (OEM)": "Skip the manufacturer registration (OEM)",
+"Pular a conta online da Microsoft": "Skip the online Microsoft account",
+"Pular a configuração de Wi-Fi": "Skip the Wi-Fi setup",
+"Local da rede": "Network location",
+"Trabalho": "Work", "Casa": "Home", "Pública": "Public",
+"Proteger o PC (configurações expressas)": "Protect your PC (express settings)",
+"Recomendado": "Recommended", "Somente atualizações": "Updates only", "Desativado (pular)": "Off (skip)",
+"Computador e região": "Computer and region",
+"Nome do computador": "Computer name",
+"Até 15 caracteres: letras, números e hífen. Em branco = o Windows escolhe. Use * para nome aleatório.": "Up to 15 characters: letters, numbers and hyphen. Blank = Windows chooses. Use * for a random name.",
+"ex.: PC-LOJA01": "e.g. PC-OFFICE01",
+"Idioma e teclado": "Language and keyboard",
+"Também definir o idioma de exibição do Windows": "Also set the Windows display language",
+"Só funciona se a ISO tiver esse idioma; senão a instalação falha. Desligado, mantém o idioma da mídia.": "Only works if the ISO has that language; otherwise setup fails. Off keeps the media's language.",
+"Fuso horário": "Time zone",
+"Usuário local": "Local user",
+"Cria uma conta local para entrar sem conta Microsoft.": "Creates a local account so you can sign in without a Microsoft account.",
+"Criar um usuário local": "Create a local user",
+"Nome do usuário": "User name", "ex.: suporte": "e.g. support",
+"Nome de exibição (opcional)": "Display name (optional)",
+"Senha (opcional)": "Password (optional)",
+"Fica em TEXTO PURO dentro do XML. Não compartilhe nem publique o arquivo.": "Stored as PLAIN TEXT inside the XML. Do not share or publish the file.",
+"Usuário é administrador": "User is an administrator",
+"Entrar automaticamente no primeiro logon": "Sign in automatically at first logon",
+"Quantidade de logons automáticos": "Number of automatic logons",
+"Comandos no primeiro logon": "Commands at first logon",
+"Um comando por linha. Cada linha vira um FirstLogonCommand (executado em ordem, como administrador).": "One command per line. Each line becomes a FirstLogonCommand (run in order, as administrator).",
+"Comandos (cmd)": "Commands (cmd)",
+"Trechos de PowerShell próprios": "Your own PowerShell snippets",
+"Inseridos dentro do script de ajustes, no ponto \"# Start here\". Só rodam se o script de ajustes estiver ligado.": "Inserted into the tweaks script at the \"# Start here\" point. They only run if the tweaks script is on.",
+"Script do sistema (roda como SYSTEM, uma vez, na instalação)": "System script (runs as SYSTEM, once, during setup)",
+"Script do usuário (roda no primeiro logon, no perfil do usuário)": "User script (runs at first logon, in the user profile)",
+"{a} de {b} ajustes ativos": "{a} of {b} tweaks on",
+"Sem script de ajustes": "No tweaks script",
+"{n} linhas de script": "{n} script lines",
+"Erro": "Error", "Falha ao gerar": "Failed to generate",
+"⚠ {n} aviso": "⚠ {n} warning", "⚠ {n} avisos": "⚠ {n} warnings",
+"Arquivo enviado para a pasta de downloads do navegador.": "File sent to the browser's downloads folder.",
+"Falha ao salvar": "Failed to save", "Falha ao abrir": "Failed to open",
+"Salvo em {p}": "Saved to {p}", "Mostrar na pasta": "Show in folder",
+"Não foi possível gerar o XML": "Could not generate the XML",
+"XML copiado para a área de transferência.": "XML copied to the clipboard.",
+"XML copiado.": "XML copied.",
+"Não foi possível copiar.": "Could not copy.",
+"Configuração carregada.": "Configuration loaded.",
+"Arquivo de perfil inválido.": "Invalid profile file.",
+"Não foi possível iniciar a interface.": "Could not start the interface.",
+"Programa encerrado. Você já pode fechar esta janela.": "Program closed. You can now close this window.",
+"Pós-instalação": "Post-install",
+"Instalar programas com o winget": "Install programs with winget",
+"Cria na área de trabalho o arquivo Pos-instalacao.bat. Dois cliques nele instalam, pelo winget, os programas marcados abaixo (precisa de internet).": "Creates Pos-instalacao.bat on the desktop. Double-clicking it installs the programs checked below with winget (internet required).",
+"Criar o script de pós-instalação na área de trabalho": "Create the post-install script on the desktop",
+"Fica na área de trabalho de todos os usuários (C:\\Users\\Public\\Desktop).": "Placed on the desktop of all users (C:\\Users\\Public\\Desktop).",
+"Executar o script sozinho no primeiro logon": "Run the script by itself at first logon",
+"O script espera o winget ficar pronto (até 5 min). Se preferir, deixe desligado e execute com dois cliques.": "The script waits for winget to be ready (up to 5 min). If you prefer, leave this off and double-click it yourself.",
+"Apagar o script da área de trabalho quando tudo for instalado": "Delete the script from the desktop when everything is installed",
+"Marcar os básicos": "Check the basics", "Marcar todos": "Check all", "Desmarcar todos": "Uncheck all",
+"{n} programas escolhidos": "{n} programs chosen",
+"Navegadores": "Browsers", "Compactadores e utilitários": "Archivers and utilities", "Mídia": "Media", "Escritório e PDF": "Office and PDF", "Comunicação": "Communication", "Acesso remoto": "Remote access", "Desenvolvimento": "Development", "Jogos": "Games", "Bibliotecas e runtimes": "Libraries and runtimes", "Hardware e segurança": "Hardware and security",
+"Outros programas": "Other programs",
+"IDs do winget, um por linha (use # para comentários)": "winget IDs, one per line (use # for comments)",
+"Para achar o ID de um programa, abra o Terminal e digite: winget search nome-do-programa": "To find a program's ID, open Terminal and type: winget search program-name",
+"Ligue a opção \"Criar o script de pós-instalação\" para usar esta lista.": "Turn on \"Create the post-install script\" to use this list.",
+"Precisa de internet. No Windows 10 antigo o winget pode não existir; o script avisa e tenta registrá-lo.": "Requires internet. On older Windows 10 winget may be missing; the script warns and tries to register it."
+},
+es: {
+"Gerador de Autounattend": "Generador de Autounattend",
+"autounattend.xml do Windows 10 / 11": "autounattend.xml de Windows 10 / 11",
+"Perfis rápidos": "Perfiles rápidos",
+"Perfis rápidos…": "Perfiles rápidos…",
+"Completo (igual ao arquivo original)": "Completo (igual al archivo original)",
+"Conservador (mantém Edge, Store, UAC…)": "Conservador (mantiene Edge, Store, UAC…)",
+"Somente instalação (sem ajustes)": "Solo instalación (sin ajustes)",
+"Perfil": "Perfil",
+"Salvar configuração…": "Guardar configuración…",
+"Grava um arquivo .json com suas escolhas": "Guarda un archivo .json con sus elecciones",
+"Abrir configuração…": "Abrir configuración…",
+"Carrega um .json salvo antes": "Carga un .json guardado antes",
+"Idioma": "Idioma",
+"Alternar modo claro/escuro": "Cambiar modo claro/oscuro",
+"Fechar o programa": "Cerrar el programa",
+"Sair": "Salir",
+"Visualizar XML": "Ver XML",
+"Copiar": "Copiar",
+"Gerar e salvar autounattend.xml": "Generar y guardar autounattend.xml",
+"Pré-visualização do XML": "Vista previa del XML",
+"Fechar": "Cerrar",
+"Salvar como…": "Guardar como…",
+"Avisos antes de salvar": "Avisos antes de guardar",
+"Voltar": "Volver",
+"Salvar mesmo assim": "Guardar de todos modos",
+"⚠ Apagar disco automaticamente": "⚠ Borrar el disco automáticamente",
+"Cancelar": "Cancelar",
+"Ativar": "Activar",
+"APAGAR": "BORRAR",
+"Com esta opção a instalação apaga todo o disco escolhido sem perguntar nada. Todos os dados dele serão perdidos. Use somente em computadores que podem ser formatados.": "Con esta opción la instalación borra todo el disco elegido sin preguntar nada. Se perderán todos sus datos. Úsela solo en equipos que se puedan formatear.",
+"Para confirmar, digite {w}:": "Para confirmar, escriba {w}:",
+"Salve o arquivo como autounattend.xml na raiz do pendrive de instalação (junto da pasta sources).": "Guarde el archivo como autounattend.xml en la raíz de la unidad USB de instalación (junto a la carpeta sources).",
+"Configuração": "Configuración",
+"Ajustes do Windows": "Ajustes de Windows",
+"{n} item(ns) desligado(s)": "{n} elemento(s) desactivado(s)",
+"Como o instalador do Windows vai se comportar. Os valores iniciais reproduzem o arquivo original.": "Cómo se comportará el instalador de Windows. Los valores iniciales reproducen el archivo original.",
+"Identificação do computador, idioma, fuso e conta de usuário.": "Identificación del equipo, idioma, zona horaria y cuenta de usuario.",
+"Para quem quer acrescentar os próprios comandos ao arquivo gerado.": "Para quien quiere añadir sus propios comandos al archivo generado.",
+"⚠ Apagar disco automaticamente está ATIVO: a instalação formatará o disco {n} sem perguntar.": "⚠ Borrar el disco automáticamente está ACTIVO: la instalación formateará el disco {n} sin preguntar.",
+"O que será removido do Windows durante a instalação.": "Qué se eliminará de Windows durante la instalación.",
+"Plano de energia personalizado para desempenho.": "Plan de energía personalizado para rendimiento.",
+"Ajustes de desempenho, serviços e tarefas agendadas.": "Ajustes de rendimiento, servicios y tareas programadas.",
+"Telemetria, privacidade, segurança e atualizações.": "Telemetría, privacidad, seguridad y actualizaciones.",
+"Aparência do Explorador, Menu Iniciar e barra de tarefas.": "Aspecto del Explorador, menú Inicio y barra de tareas.",
+"Ajustes aplicados ao perfil do usuário no primeiro logon.": "Ajustes aplicados al perfil del usuario en el primer inicio de sesión.",
+"Marcado = será aplicado. Desmarque o que você NÃO quer aplicar.": "Marcado = se aplicará. Desmarque lo que NO quiera aplicar.",
+"Resultados da busca": "Resultados de la búsqueda",
+"Buscar em todos os ajustes (ex.: telemetria, Xbox, OneDrive, UAC…)": "Buscar en todos los ajustes (ej.: telemetría, Xbox, OneDrive, UAC…)",
+"Buscar ajustes": "Buscar ajustes",
+"Nada encontrado.": "No se encontró nada.",
+"O script de ajustes está desligado na aba Instalação — nada desta página será aplicado.": "El script de ajustes está desactivado en la pestaña Instalación: nada de esta página se aplicará.",
+"Estes itens não terão efeito porque o item \"{n}\" está desligado.": "Estos elementos no tendrán efecto porque \"{n}\" está desactivado.",
+"Sistema (todos os usuários — HKLM)": "Sistema (todos los usuarios — HKLM)",
+"Usuário (primeiro logon — HKCU)": "Usuario (primer inicio de sesión — HKCU)",
+"Marcar/desmarcar todos": "Marcar/desmarcar todos",
+"Marcar ou desmarcar todos de {n}": "Marcar o desmarcar todos de {n}",
+"Não definir": "No definir",
+"Mostrar": "Mostrar", "Ocultar": "Ocultar",
+"Requisitos do Windows 11": "Requisitos de Windows 11",
+"Permite instalar em computadores que não atendem aos requisitos oficiais.": "Permite instalar en equipos que no cumplen los requisitos oficiales.",
+"Ignorar verificação de TPM 2.0": "Omitir la comprobación de TPM 2.0",
+"Ignorar verificação de Secure Boot": "Omitir la comprobación de Secure Boot",
+"Ignorar verificação de armazenamento": "Omitir la comprobación de almacenamiento",
+"Ignorar verificação de processador": "Omitir la comprobación del procesador",
+"Ignorar verificação de memória RAM": "Omitir la comprobación de memoria RAM",
+"Ignorar verificação de disco": "Omitir la comprobación de disco",
+"Chave e edição": "Clave y edición",
+"A chave genérica 00000-… faz o instalador não perguntar a chave; o Windows ativa depois por licença digital ou chave própria.": "La clave genérica 00000-… hace que el instalador no pida la clave; Windows se activa después con licencia digital o con su propia clave.",
+"Chave do produto": "Clave de producto",
+"Formato XXXXX-XXXXX-XXXXX-XXXXX-XXXXX. Deixe em branco para não gravar chave.": "Formato XXXXX-XXXXX-XXXXX-XXXXX-XXXXX. Déjelo en blanco para no escribir clave.",
+"Mostrar a escolha de edição (Home, Pro…) durante a instalação": "Mostrar la elección de edición (Home, Pro…) durante la instalación",
+"Gravar PID.txt para o instalador (amd64)": "Escribir PID.txt para el instalador (amd64)",
+"Faz o instalador usar a chave sem perguntar.": "Hace que el instalador use la clave sin preguntar.",
+"Disco": "Disco",
+"Por padrão o instalador pergunta onde instalar. Ative só se quiser instalação totalmente sem perguntas.": "Por defecto el instalador pregunta dónde instalar. Actívelo solo para una instalación totalmente desatendida.",
+"Apagar e particionar o disco automaticamente": "Borrar y particionar el disco automáticamente",
+"PERIGO: todos os dados do disco escolhido são apagados sem confirmação.": "PELIGRO: todos los datos del disco elegido se borran sin confirmación.",
+"Número do disco": "Número de disco",
+"Normalmente 0 (primeiro disco). Confira no Gerenciamento de Disco.": "Normalmente 0 (primer disco). Compruébelo en Administración de discos.",
+"Tipo de firmware": "Tipo de firmware",
+"UEFI / GPT (computadores modernos)": "UEFI / GPT (equipos modernos)",
+"BIOS legado / MBR": "BIOS heredada / MBR",
+"Durante a instalação (specialize)": "Durante la instalación (specialize)",
+"Comandos executados antes do primeiro logon.": "Comandos ejecutados antes del primer inicio de sesión.",
+"Executar o script de ajustes do Windows (Winhancements.ps1)": "Ejecutar el script de ajustes de Windows (Winhancements.ps1)",
+"Desligado = nenhuma remoção de apps/ajuste de registro. As abas de ajustes ficam sem efeito.": "Desactivado = sin eliminación de aplicaciones ni ajustes del registro. Las pestañas de ajustes no tendrán efecto.",
+"Permitir criar conta local no OOBE (BypassNRO)": "Permitir crear una cuenta local en el OOBE (BypassNRO)",
+"Desativar adaptadores de rede temporariamente durante o OOBE": "Desactivar temporalmente los adaptadores de red durante el OOBE",
+"Evita atualizações no meio da instalação e permite conta local.": "Evita actualizaciones a mitad de la instalación y permite cuenta local.",
+"Ativar .NET Framework 3.5 a partir da mídia de instalação": "Activar .NET Framework 3.5 desde el medio de instalación",
+"Procura a pasta sources\\sxs nas unidades C: a K:.": "Busca la carpeta sources\\sxs en las unidades C: a K:.",
+"Tela inicial de configuração (OOBE)": "Configuración inicial (OOBE)",
+"Páginas que serão puladas na primeira inicialização.": "Páginas que se omitirán en el primer arranque.",
+"Pular o contrato de licença (EULA)": "Omitir el contrato de licencia (EULA)",
+"Pular o registro do fabricante (OEM)": "Omitir el registro del fabricante (OEM)",
+"Pular a conta online da Microsoft": "Omitir la cuenta Microsoft en línea",
+"Pular a configuração de Wi-Fi": "Omitir la configuración de Wi-Fi",
+"Local da rede": "Ubicación de red",
+"Trabalho": "Trabajo", "Casa": "Casa", "Pública": "Pública",
+"Proteger o PC (configurações expressas)": "Proteger el PC (configuración rápida)",
+"Recomendado": "Recomendado", "Somente atualizações": "Solo actualizaciones", "Desativado (pular)": "Desactivado (omitir)",
+"Computador e região": "Equipo y región",
+"Nome do computador": "Nombre del equipo",
+"Até 15 caracteres: letras, números e hífen. Em branco = o Windows escolhe. Use * para nome aleatório.": "Hasta 15 caracteres: letras, números y guion. En blanco = Windows elige. Use * para un nombre aleatorio.",
+"ex.: PC-LOJA01": "ej.: PC-OFICINA01",
+"Idioma e teclado": "Idioma y teclado",
+"Também definir o idioma de exibição do Windows": "Definir también el idioma de visualización de Windows",
+"Só funciona se a ISO tiver esse idioma; senão a instalação falha. Desligado, mantém o idioma da mídia.": "Solo funciona si la ISO tiene ese idioma; si no, la instalación falla. Desactivado, mantiene el idioma del medio.",
+"Fuso horário": "Zona horaria",
+"Usuário local": "Usuario local",
+"Cria uma conta local para entrar sem conta Microsoft.": "Crea una cuenta local para iniciar sesión sin cuenta Microsoft.",
+"Criar um usuário local": "Crear un usuario local",
+"Nome do usuário": "Nombre de usuario", "ex.: suporte": "ej.: soporte",
+"Nome de exibição (opcional)": "Nombre para mostrar (opcional)",
+"Senha (opcional)": "Contraseña (opcional)",
+"Fica em TEXTO PURO dentro do XML. Não compartilhe nem publique o arquivo.": "Queda en TEXTO PLANO dentro del XML. No comparta ni publique el archivo.",
+"Usuário é administrador": "El usuario es administrador",
+"Entrar automaticamente no primeiro logon": "Iniciar sesión automáticamente la primera vez",
+"Quantidade de logons automáticos": "Cantidad de inicios de sesión automáticos",
+"Comandos no primeiro logon": "Comandos en el primer inicio de sesión",
+"Um comando por linha. Cada linha vira um FirstLogonCommand (executado em ordem, como administrador).": "Un comando por línea. Cada línea se convierte en un FirstLogonCommand (se ejecuta en orden, como administrador).",
+"Comandos (cmd)": "Comandos (cmd)",
+"Trechos de PowerShell próprios": "Fragmentos de PowerShell propios",
+"Inseridos dentro do script de ajustes, no ponto \"# Start here\". Só rodam se o script de ajustes estiver ligado.": "Se insertan en el script de ajustes, en el punto \"# Start here\". Solo se ejecutan si el script de ajustes está activo.",
+"Script do sistema (roda como SYSTEM, uma vez, na instalação)": "Script del sistema (se ejecuta como SYSTEM, una vez, durante la instalación)",
+"Script do usuário (roda no primeiro logon, no perfil do usuário)": "Script del usuario (se ejecuta en el primer inicio de sesión, en el perfil del usuario)",
+"{a} de {b} ajustes ativos": "{a} de {b} ajustes activos",
+"Sem script de ajustes": "Sin script de ajustes",
+"{n} linhas de script": "{n} líneas de script",
+"Erro": "Error", "Falha ao gerar": "Error al generar",
+"⚠ {n} aviso": "⚠ {n} aviso", "⚠ {n} avisos": "⚠ {n} avisos",
+"Arquivo enviado para a pasta de downloads do navegador.": "Archivo enviado a la carpeta de descargas del navegador.",
+"Falha ao salvar": "Error al guardar", "Falha ao abrir": "Error al abrir",
+"Salvo em {p}": "Guardado en {p}", "Mostrar na pasta": "Mostrar en la carpeta",
+"Não foi possível gerar o XML": "No se pudo generar el XML",
+"XML copiado para a área de transferência.": "XML copiado al portapapeles.",
+"XML copiado.": "XML copiado.",
+"Não foi possível copiar.": "No se pudo copiar.",
+"Configuração carregada.": "Configuración cargada.",
+"Arquivo de perfil inválido.": "Archivo de perfil no válido.",
+"Não foi possível iniciar a interface.": "No se pudo iniciar la interfaz.",
+"Programa encerrado. Você já pode fechar esta janela.": "Programa cerrado. Ya puede cerrar esta ventana.",
+"Pós-instalação": "Posinstalación",
+"Instalar programas com o winget": "Instalar programas con winget",
+"Cria na área de trabalho o arquivo Pos-instalacao.bat. Dois cliques nele instalam, pelo winget, os programas marcados abaixo (precisa de internet).": "Crea en el escritorio el archivo Pos-instalacao.bat. Con doble clic instala, mediante winget, los programas marcados abajo (requiere internet).",
+"Criar o script de pós-instalação na área de trabalho": "Crear el script de posinstalación en el escritorio",
+"Fica na área de trabalho de todos os usuários (C:\\Users\\Public\\Desktop).": "Queda en el escritorio de todos los usuarios (C:\\Users\\Public\\Desktop).",
+"Executar o script sozinho no primeiro logon": "Ejecutar el script solo en el primer inicio de sesión",
+"O script espera o winget ficar pronto (até 5 min). Se preferir, deixe desligado e execute com dois cliques.": "El script espera a que winget esté listo (hasta 5 min). Si prefiere, déjelo desactivado y ejecútelo con doble clic.",
+"Apagar o script da área de trabalho quando tudo for instalado": "Borrar el script del escritorio cuando todo esté instalado",
+"Marcar os básicos": "Marcar los básicos", "Marcar todos": "Marcar todos", "Desmarcar todos": "Desmarcar todos",
+"{n} programas escolhidos": "{n} programas elegidos",
+"Navegadores": "Navegadores", "Compactadores e utilitários": "Compresores y utilidades", "Mídia": "Multimedia", "Escritório e PDF": "Oficina y PDF", "Comunicação": "Comunicación", "Acesso remoto": "Acceso remoto", "Desenvolvimento": "Desarrollo", "Jogos": "Juegos", "Bibliotecas e runtimes": "Bibliotecas y runtimes", "Hardware e segurança": "Hardware y seguridad",
+"Outros programas": "Otros programas",
+"IDs do winget, um por linha (use # para comentários)": "IDs de winget, uno por línea (use # para comentarios)",
+"Para achar o ID de um programa, abra o Terminal e digite: winget search nome-do-programa": "Para hallar el ID de un programa, abra Terminal y escriba: winget search nombre-del-programa",
+"Ligue a opção \"Criar o script de pós-instalação\" para usar esta lista.": "Active \"Crear el script de posinstalación\" para usar esta lista.",
+"Precisa de internet. No Windows 10 antigo o winget pode não existir; o script avisa e tenta registrá-lo.": "Requiere internet. En Windows 10 antiguo winget puede no existir; el script avisa e intenta registrarlo."
+}
+};
+// "Fechar" também serve ao botão do aviso; "Instalação" etc. vêm do catálogo (i18n)
+const TZN = {
+"E. South America Standard Time": ["(UTC-03:00) Brasília", "(UTC-03:00) Brasilia"],
+"Central Brazilian Standard Time": ["(UTC-04:00) Cuiabá / Campo Grande", "(UTC-04:00) Cuiabá / Campo Grande"],
+"SA Western Standard Time": ["(UTC-04:00) Manaus / La Paz", "(UTC-04:00) Manaos / La Paz"],
+"SA Pacific Standard Time": ["(UTC-05:00) Rio Branco / Bogotá / Lima", "(UTC-05:00) Río Branco / Bogotá / Lima"],
+"Argentina Standard Time": ["(UTC-03:00) Buenos Aires", "(UTC-03:00) Buenos Aires"],
+"UTC": ["(UTC) Coordinated Universal Time", "(UTC) Tiempo universal coordinado"],
+"GMT Standard Time": ["(UTC+00:00) Lisbon / London", "(UTC+00:00) Lisboa / Londres"],
+"W. Europe Standard Time": ["(UTC+01:00) Berlin / Rome / Amsterdam", "(UTC+01:00) Berlín / Roma / Ámsterdam"],
+"Romance Standard Time": ["(UTC+01:00) Paris / Madrid", "(UTC+01:00) París / Madrid"],
+"Eastern Standard Time": ["(UTC-05:00) Eastern Time (US & Canada)", "(UTC-05:00) Hora del este (EE. UU. y Canadá)"],
+"Central Standard Time": ["(UTC-06:00) Central Time (US & Canada)", "(UTC-06:00) Hora central (EE. UU. y Canadá)"],
+"Mountain Standard Time": ["(UTC-07:00) Mountain Time (US & Canada)", "(UTC-07:00) Hora de las Montañas (EE. UU. y Canadá)"],
+"Pacific Standard Time": ["(UTC-08:00) Pacific Time (US & Canada)", "(UTC-08:00) Hora del Pacífico (EE. UU. y Canadá)"],
+"Central Standard Time (Mexico)": ["(UTC-06:00) Mexico City", "(UTC-06:00) Ciudad de México"],
+"Pacific SA Standard Time": ["(UTC-04:00) Santiago", "(UTC-04:00) Santiago"],
+"Paraguay Standard Time": ["(UTC-03:00) Asunción", "(UTC-03:00) Asunción"],
+"Montevideo Standard Time": ["(UTC-03:00) Montevideo", "(UTC-03:00) Montevideo"],
+"Venezuela Standard Time": ["(UTC-04:00) Caracas", "(UTC-04:00) Caracas"],
+"Atlantic Standard Time": ["(UTC-04:00) Atlantic Time (Canada)", "(UTC-04:00) Hora del Atlántico (Canadá)"],
+"China Standard Time": ["(UTC+08:00) Beijing / Hong Kong", "(UTC+08:00) Pekín / Hong Kong"],
+"Tokyo Standard Time": ["(UTC+09:00) Tokyo", "(UTC+09:00) Tokio"],
+"India Standard Time": ["(UTC+05:30) Chennai / New Delhi", "(UTC+05:30) Chennai / Nueva Delhi"]
+};
+
+let LANG = "pt";
+function t(k, v) {
+  let s = (LANG !== "pt" && D[LANG] && D[LANG][k]) || k;
+  if (v) for (const [a, b] of Object.entries(v)) s = s.split("{" + a + "}").join(b);
+  return s;
+}
+// campo traduzido do catálogo (item, grupo ou aba)
+function loc(o, f) { if (LANG !== "pt" && o.i18n && o.i18n[LANG] && o.i18n[LANG][f] != null) return o.i18n[LANG][f]; return o[f]; }
+
+function applyStatic() {
+  document.documentElement.lang = LANG === "pt" ? "pt-BR" : LANG;
+  document.querySelectorAll("[data-i]").forEach(n => { n.textContent = t(n.dataset.i); });
+  document.querySelectorAll("[data-ititle]").forEach(n => { n.title = t(n.dataset.ititle); });
+  document.querySelectorAll("[data-iaria]").forEach(n => { n.setAttribute("aria-label", t(n.dataset.iaria)); });
+  $("#wtip").textContent = t("Salve o arquivo como autounattend.xml na raiz do pendrive de instalação (junto da pasta sources).");
+  $("#wipetxt").textContent = t("Com esta opção a instalação apaga todo o disco escolhido sem perguntar nada. Todos os dados dele serão perdidos. Use somente em computadores que podem ser formatados.");
+  $("#wipeask").textContent = t("Para confirmar, digite {w}:", { w: t("APAGAR") });
+  $("#lang").value = LANG;
+  setThemeIcon();
+}
+
+// ------------------------------------------------------------ tema
+let THEME = "light";
+const SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>';
+function setThemeIcon() { $("#theme").innerHTML = THEME === "dark" ? SUN : MOON; }
+function applyTheme() { document.documentElement.setAttribute("data-theme", THEME); setThemeIcon(); }
+function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+const ICONS = {
+  disc: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  bolt: '<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
+  gauge: '<path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/>',
+  shield: '<path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6z"/>',
+  window: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9.5h18"/>',
+  sliders: '<path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="8" cy="18" r="2" fill="var(--surface)"/>',
+  code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 6l-3 12"/>',
+  download: '<path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v3h16v-3"/>',
+};
+const icon = n => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.innerHTML = ICONS[n] || ""; return s; };
+
+let S = { winget: [], cat: null, def: null, o: null, tab: "setup", q: "", open: {}, byId: {}, locales: [], tz: [], res: null, saving: false };
+
+const ITEM_TABS = ["apps", "power", "perf", "priv", "ui", "user"];
+const DEP = { "apps-packages": "script-bloat", "apps-caps": "script-bloat", "power-settings": "power-plan" };
+
+// ------------------------------------------------------------ campos declarativos (textos em pt = chaves de tradução)
+const FIELDS = {
+  setup: [
+    { title: "Requisitos do Windows 11", desc: "Permite instalar em computadores que não atendem aos requisitos oficiais.", f: [
+      { k: "bypassTPM", t: "bool", l: "Ignorar verificação de TPM 2.0" },
+      { k: "bypassSecureBoot", t: "bool", l: "Ignorar verificação de Secure Boot" },
+      { k: "bypassStorage", t: "bool", l: "Ignorar verificação de armazenamento" },
+      { k: "bypassCPU", t: "bool", l: "Ignorar verificação de processador" },
+      { k: "bypassRAM", t: "bool", l: "Ignorar verificação de memória RAM" },
+      { k: "bypassDisk", t: "bool", l: "Ignorar verificação de disco" } ] },
+    { title: "Chave e edição", desc: "A chave genérica 00000-… faz o instalador não perguntar a chave; o Windows ativa depois por licença digital ou chave própria.", f: [
+      { k: "productKey", t: "text", l: "Chave do produto", h: "Formato XXXXX-XXXXX-XXXXX-XXXXX-XXXXX. Deixe em branco para não gravar chave.", ph: "00000-00000-00000-00000-00000", raw: true },
+      { k: "showEditions", t: "bool", l: "Mostrar a escolha de edição (Home, Pro…) durante a instalação" },
+      { k: "writePID", t: "bool", l: "Gravar PID.txt para o instalador (amd64)", h: "Faz o instalador usar a chave sem perguntar." } ] },
+    { title: "Disco", desc: "Por padrão o instalador pergunta onde instalar. Ative só se quiser instalação totalmente sem perguntas.", f: [
+      { k: "wipeDisk", t: "bool", l: "Apagar e particionar o disco automaticamente", danger: true, h: "PERIGO: todos os dados do disco escolhido são apagados sem confirmação." },
+      { k: "diskID", t: "num", l: "Número do disco", min: 0, max: 32, h: "Normalmente 0 (primeiro disco). Confira no Gerenciamento de Disco.", when: o => o.wipeDisk },
+      { k: "firmware", t: "sel", l: "Tipo de firmware", opts: [["uefi", "UEFI / GPT (computadores modernos)"], ["bios", "BIOS legado / MBR"]], when: o => o.wipeDisk } ] },
+    { title: "Durante a instalação (specialize)", desc: "Comandos executados antes do primeiro logon.", f: [
+      { k: "runScript", t: "bool", l: "Executar o script de ajustes do Windows (Winhancements.ps1)", h: "Desligado = nenhuma remoção de apps/ajuste de registro. As abas de ajustes ficam sem efeito." },
+      { k: "bypassNRO", t: "bool", l: "Permitir criar conta local no OOBE (BypassNRO)" },
+      { k: "netFx3", t: "bool", l: "Ativar .NET Framework 3.5 a partir da mídia de instalação", h: "Procura a pasta sources\\sxs nas unidades C: a K:." } ] },
+    { title: "Tela inicial de configuração (OOBE)", desc: "Páginas que serão puladas na primeira inicialização.", f: [
+      { k: "hideEULA", t: "bool", l: "Pular o contrato de licença (EULA)" },
+      { k: "hideOEM", t: "bool", l: "Pular o registro do fabricante (OEM)" },
+      { k: "hideOnline", t: "bool", l: "Pular a conta online da Microsoft" },
+      { k: "networkLocation", t: "sel", l: "Local da rede", opts: [["", "Não definir"], ["Work", "Trabalho"], ["Home", "Casa"], ["Other", "Pública"]] },
+      { k: "protectYourPC", t: "sel", l: "Proteger o PC (configurações expressas)", int: true, opts: [["0", "Não definir"], ["1", "Recomendado"], ["2", "Somente atualizações"], ["3", "Desativado (pular)"]] } ] },
+  ],
+  account: [
+    { title: "Computador e região", f: [
+      { k: "computerName", t: "text", l: "Nome do computador", h: "Até 15 caracteres: letras, números e hífen. Em branco = o Windows escolhe. Use * para nome aleatório.", ph: "ex.: PC-LOJA01" },
+      { k: "locale", t: "locale", l: "Idioma e teclado" },
+      { k: "setUILanguage", t: "bool", l: "Também definir o idioma de exibição do Windows", h: "Só funciona se a ISO tiver esse idioma; senão a instalação falha. Desligado, mantém o idioma da mídia." },
+      { k: "timeZone", t: "tz", l: "Fuso horário" } ] },
+    { title: "Contas de usuário", desc: "Cria contas de usuário locais para entrar sem conta Microsoft.", custom: "users" },
+    { title: "Papel de parede", desc: "Coloque aqui sua wallpaper personalizada para a área de trabalho.", f: [
+      { k: "wallpaperEnabled", t: "bool", l: "Definir papel de parede personalizado" },
+      { k: "wallpaperMode", t: "sel", l: "Origem do papel de parede", opts: [["url", "Baixar imagem de uma URL"], ["script", "Script PowerShell (avançado)"]], when: o => o.wallpaperEnabled },
+      { k: "wallpaperUrl", t: "text", l: "URL da imagem", ph: "https://marcovivas.com/docs/DEV9.png", h: "URL direta para um arquivo de imagem (.png ou .jpg). Será baixada durante a instalação.", when: o => o.wallpaperEnabled && o.wallpaperMode !== "script" },
+      { k: "wallpaperScript", t: "area", l: "Script PowerShell para carregar a imagem", ph: "# Script que retorna byte[]", h: "O script é executado durante o primeiro logon e deve retornar um byte[] com os dados brutos da imagem.", when: o => o.wallpaperEnabled && o.wallpaperMode === "script", full: true } ] },
+  ],
+  adv: [
+    { title: "Comandos no primeiro logon", desc: "Um comando por linha. Cada linha vira um FirstLogonCommand (executado em ordem, como administrador).", f: [
+      { k: "firstLogonCmds", t: "area", l: "Comandos (cmd)", ph: "powercfg /h off\nreg add HKLM\\SOFTWARE\\Teste /v A /d 1 /f", full: true, raw: true } ] },
+    { title: "Trechos de PowerShell próprios", desc: "Inseridos dentro do script de ajustes, no ponto \"# Start here\". Só rodam se o script de ajustes estiver ligado.", f: [
+      { k: "customSystemScript", t: "area", l: "Script do sistema (roda como SYSTEM, uma vez, na instalação)", full: true },
+      { k: "customUserScript", t: "area", l: "Script do usuário (roda no primeiro logon, no perfil do usuário)", full: true } ] },
+  ],
+};
+
+// ------------------------------------------------------------ estado dos itens
+const isOn = id => S.o.items[id] !== false;
+const setItem = (id, v) => { if (v) delete S.o.items[id]; else S.o.items[id] = false; };
+function depOff(g) { const d = DEP[g.id]; return d && !isOn(d); }
+function groupItems(g) { return S.cat.items.filter(i => i.group === g.id && !i.removed).sort((a, b) => a.order - b.order); }
+function tabOffCount(tab) {
+  let n = 0;
+  for (const g of S.cat.groups) if (g.tab === tab) for (const i of groupItems(g)) if (!isOn(i.id)) n++;
+  return n;
+}
+
+// ------------------------------------------------------------ renderização
+function renderNav() {
+  const nav = $("#nav"); nav.textContent = "";
+  nav.append(el("div", { class: "lbl", text: t("Configuração") }));
+  for (const tb of S.cat.tabs) {
+    if (tb.id === "apps") nav.append(el("hr"), el("div", { class: "lbl", text: t("Ajustes do Windows") }));
+    if (tb.id === "adv") nav.append(el("hr"));
+    const n = ITEM_TABS.includes(tb.id) ? tabOffCount(tb.id) : 0;
+    nav.append(el("button", { class: S.tab === tb.id && !S.q ? "on" : "", onclick: () => { S.tab = tb.id; S.q = ""; render(); $("#content").scrollTop = 0; } },
+      icon(tb.icon), loc(tb, "title"), n ? el("span", { class: "cnt", title: t("{n} item(ns) desligado(s)", { n }), text: "−" + n }) : null));
+  }
+}
+
+function fieldNode(f) {
+  const o = S.o, id = "f_" + f.k;
+  const upd = () => { regen(); if (["wipeDisk", "createUser", "autoLogon", "runScript", "wallpaperEnabled", "wallpaperMode"].includes(f.k)) render(true); };
+  const L = t(f.l), H = f.h ? t(f.h) : null;
+  if (f.t === "bool") {
+    const c = el("input", { type: "checkbox", id, checked: !!o[f.k] });
+    c.addEventListener("change", () => {
+      if (f.k === "wipeDisk" && c.checked) { c.checked = false; askWipe(() => { o.wipeDisk = true; upd(); }); return; }
+      o[f.k] = c.checked; upd();
+    });
+    return el("div", { class: "chk" + (f.danger ? " danger" : "") }, c, el("div", null, el("label", { for: id, text: L }), H ? el("span", { class: "h", text: H }) : null));
+  }
+  let inp;
+  const ph = f.ph ? (f.raw ? f.ph : t(f.ph)) : "";
+  if (f.t === "text" || f.t === "pw") {
+    inp = el("input", { type: f.t === "pw" ? "password" : "text", id, value: o[f.k] || "", placeholder: ph, autocomplete: "off", spellcheck: "false" });
+    inp.addEventListener("input", () => { o[f.k] = inp.value; regen(); });
+    if (f.t === "pw") {
+      const b = el("button", { class: "btn sm", type: "button", text: t("Mostrar") });
+      b.addEventListener("click", () => { inp.type = inp.type === "password" ? "text" : "password"; b.textContent = inp.type === "password" ? t("Mostrar") : t("Ocultar"); });
+      inp = el("div", { class: "pw" }, inp, b); inp.firstChild.style.flex = "1";
+    }
+  } else if (f.t === "num") {
+    inp = el("input", { type: "number", id, value: o[f.k], min: f.min, max: f.max });
+    inp.addEventListener("input", () => { o[f.k] = parseInt(inp.value, 10) || 0; regen(); });
+  } else if (f.t === "area") {
+    inp = el("textarea", { id, placeholder: ph, spellcheck: "false" }); inp.value = o[f.k] || "";
+    inp.addEventListener("input", () => { o[f.k] = inp.value; regen(); });
+  } else {
+    let opts;
+    if (f.t === "locale") opts = [["", t("Não definir")]].concat(S.locales.map(x => [x.id, x.name]));
+    else if (f.t === "tz") opts = [["", t("Não definir")]].concat(S.tz.map(x => [x.id, (LANG === "pt" ? x.name : (TZN[x.id] ? TZN[x.id][LANG === "en" ? 0 : 1] : x.name))]));
+    else opts = f.opts.map(([v, n]) => [v, t(n)]);
+    inp = el("select", { id }, opts.map(([v, n]) => el("option", { value: v, text: n })));
+    inp.value = String(o[f.k] ?? "");
+    inp.addEventListener("change", () => {
+      o[f.k] = f.int ? parseInt(inp.value, 10) : inp.value;
+      regen();
+      if (f.k === "wallpaperMode") render(true);
+    });
+  }
+  return el("div", { class: "f" + (f.full || f.t === "area" ? " full" : "") }, el("label", { class: "k", for: id, text: L }), inp, H ? el("div", { class: "h", text: H }) : null);
+}
+
+function renderUsersCard(c) {
+  const o = S.o;
+  if (!o.userAccounts || !o.userAccounts.length) {
+    if (o.userName) {
+      o.userAccounts = [{
+        name: o.userName,
+        displayName: o.userDisplay || "",
+        password: o.userPassword || "",
+        group: o.userAdmin === false ? "Users" : "Administrators"
+      }];
+    } else {
+      o.userAccounts = [{
+        name: "",
+        displayName: "",
+        password: "",
+        group: "Administrators"
+      }];
+    }
+  }
+
+  const syncLegacy = () => {
+    if (o.userAccounts.length > 0) {
+      o.userName = o.userAccounts[0].name || "";
+      o.userDisplay = o.userAccounts[0].displayName || "";
+      o.userPassword = o.userAccounts[0].password || "";
+      o.userAdmin = o.userAccounts[0].group === "Administrators";
+    }
+    regen();
+  };
+
+  const card = el("div", { class: "card" });
+  const hd = el("div", { class: "hd" }, el("div", { class: "tg" }, el("h3", { text: t(c.title) }), c.desc ? el("div", { class: "d", text: t(c.desc) }) : null));
+  const bd = el("div", { class: "bd" });
+
+  const idCreate = "f_createUser";
+  const chkCreate = el("input", { type: "checkbox", id: idCreate, checked: !!o.createUser });
+  chkCreate.addEventListener("change", () => {
+    o.createUser = chkCreate.checked;
+    syncLegacy();
+    render(true);
+  });
+  bd.append(el("div", { class: "chk" }, chkCreate, el("div", null, el("label", { for: idCreate, text: t("Criar contas de usuário locais") }), el("span", { class: "h", text: t("Define contas locais e dispensa a criação de conta Microsoft no OOBE.") }))));
+
+  if (o.createUser) {
+    const listDiv = el("div", { style: "margin: 12px 0; display: flex; flex-direction: column; gap: 10px;" });
+
+    o.userAccounts.forEach((acc, idx) => {
+      const itemBox = el("div", { style: "background: var(--blue-xl); border: 1px solid var(--line); border-radius: 9px; padding: 12px; display: flex; flex-direction: column; gap: 8px;" });
+
+      const headerRow = el("div", { style: "display: flex; justify-content: space-between; align-items: center;" },
+        el("b", { style: "font-size: 13px; color: var(--blue-d);", text: t("Conta #{n}", { n: idx + 1 }) }),
+        o.userAccounts.length > 1 ? el("button", {
+          class: "btn sm dng",
+          type: "button",
+          text: t("Remover"),
+          onclick: () => {
+            o.userAccounts.splice(idx, 1);
+            syncLegacy();
+            render(true);
+          }
+        }) : null
+      );
+      itemBox.append(headerRow);
+
+      const grid = el("div", { class: "fgrid", style: "padding: 0;" });
+
+      // Nome da conta
+      const inpName = el("input", { type: "text", value: acc.name || "", placeholder: "ex.: Marco", autocomplete: "off", spellcheck: "false" });
+      inpName.addEventListener("input", () => { acc.name = inpName.value; syncLegacy(); });
+      grid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Nome da conta") }), inpName));
+
+      // Nome de exibição
+      const inpDisp = el("input", { type: "text", value: acc.displayName || "", placeholder: t("Opcional (igual ao nome)"), autocomplete: "off", spellcheck: "false" });
+      inpDisp.addEventListener("input", () => { acc.displayName = inpDisp.value; syncLegacy(); });
+      grid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Nome de exibição (opcional)") }), inpDisp));
+
+      // Senha
+      const inpPw = el("input", { type: "password", value: acc.password || "", placeholder: t("Opcional"), autocomplete: "off", spellcheck: "false" });
+      inpPw.addEventListener("input", () => { acc.password = inpPw.value; syncLegacy(); });
+      const btnShow = el("button", { class: "btn sm", type: "button", text: t("Mostrar"), onclick: () => {
+        inpPw.type = inpPw.type === "password" ? "text" : "password";
+        btnShow.textContent = inpPw.type === "password" ? t("Mostrar") : t("Ocultar");
+      }});
+      const pwDiv = el("div", { class: "pw" }, inpPw, btnShow);
+      pwDiv.firstChild.style.flex = "1";
+      grid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Senha (opcional)") }), pwDiv, el("div", { class: "h", text: t("Fica em TEXTO PURO no XML.") })));
+
+      // Grupo
+      const selGroup = el("select", null,
+        el("option", { value: "Administrators", text: t("Administradores") }),
+        el("option", { value: "Users", text: t("Usuários padrão") })
+      );
+      selGroup.value = acc.group || "Administrators";
+      selGroup.addEventListener("change", () => { acc.group = selGroup.value; syncLegacy(); });
+      grid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Tipo de conta") }), selGroup));
+
+      itemBox.append(grid);
+      listDiv.append(itemBox);
+    });
+
+    bd.append(listDiv);
+
+    // Botão Adicionar Conta
+    const btnAdd = el("button", {
+      class: "btn sm",
+      type: "button",
+      style: "align-self: flex-start; margin-bottom: 14px;",
+      text: "+ " + t("Adicionar outra conta"),
+      onclick: () => {
+        o.userAccounts.push({ name: "", displayName: "", password: "", group: "Users" });
+        syncLegacy();
+        render(true);
+      }
+    });
+    bd.append(btnAdd);
+
+    // Logon automático
+    const autoDiv = el("div", { style: "border-top: 1px solid var(--line2); padding-top: 12px; margin-top: 6px;" });
+    const idAuto = "f_autoLogon";
+    const chkAuto = el("input", { type: "checkbox", id: idAuto, checked: !!o.autoLogon });
+    chkAuto.addEventListener("change", () => {
+      o.autoLogon = chkAuto.checked;
+      syncLegacy();
+      render(true);
+    });
+    autoDiv.append(el("div", { class: "chk" }, chkAuto, el("div", null, el("label", { for: idAuto, text: t("Entrar automaticamente no primeiro logon") }))));
+
+    if (o.autoLogon) {
+      const autoGrid = el("div", { class: "fgrid", style: "margin-top: 8px;" });
+
+      const selUser = el("select", null);
+      selUser.append(el("option", { value: "", text: t("Primeiro administrador (padrão)") }));
+      o.userAccounts.forEach(acc => {
+        if (acc.name) {
+          selUser.append(el("option", { value: acc.name, text: acc.name + " (" + (acc.group === "Administrators" ? t("Administrador") : t("Usuário")) + ")" }));
+        }
+      });
+      selUser.value = o.autoLogonUser || "";
+      selUser.addEventListener("change", () => { o.autoLogonUser = selUser.value; syncLegacy(); });
+      autoGrid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Conta para logon automático") }), selUser));
+
+      const inpCount = el("input", { type: "number", min: 1, max: 999, value: o.autoLogonCount || 1 });
+      inpCount.addEventListener("input", () => { o.autoLogonCount = parseInt(inpCount.value, 10) || 1; syncLegacy(); });
+      autoGrid.append(el("div", { class: "f" }, el("label", { class: "k", text: t("Quantidade de logons automáticos") }), inpCount));
+
+      autoDiv.append(autoGrid);
+    }
+    bd.append(autoDiv);
+  }
+
+  card.append(hd, bd);
+  return card;
+}
+
+function renderFields(tab) {
+  const w = $("#wrap");
+  const T = S.cat.tabs.find(x => x.id === tab);
+  w.append(el("h2", { text: loc(T, "title") }));
+  const lead = { setup: "Como o instalador do Windows vai se comportar. Os valores iniciais reproduzem o arquivo original.", account: "Identificação do computador, idioma, fuso e conta de usuário.", adv: "Para quem quer acrescentar os próprios comandos ao arquivo gerado." }[tab];
+  w.append(el("p", { class: "lead", text: t(lead) }));
+  if (S.o.wipeDisk) w.append(el("div", { class: "note b", text: t("⚠ Apagar disco automaticamente está ATIVO: a instalação formatará o disco {n} sem perguntar.", { n: S.o.diskID }) }));
+  for (const c of FIELDS[tab]) {
+    if (c.custom === "users") {
+      w.append(renderUsersCard(c));
+      continue;
+    }
+    const bd = el("div", { class: "bd" });
+    let grid = null;
+    for (const f of c.f) {
+      if (f.when && !f.when(S.o)) continue;
+      const n = fieldNode(f);
+      if (f.t === "bool") { grid = null; bd.append(n); }
+      else { if (!grid) { grid = el("div", { class: "fgrid" }); bd.append(grid); } grid.append(n); }
+    }
+    w.append(el("div", { class: "card" }, el("div", { class: "hd" }, el("div", { class: "tg" }, el("h3", { text: t(c.title) }), c.desc ? el("div", { class: "d", text: t(c.desc) }) : null)), bd));
+  }
+}
+
+function itemRow(it, dis) {
+  const id = "i_" + it.id;
+  const c = el("input", { type: "checkbox", id, checked: isOn(it.id) });
+  c.addEventListener("change", () => { setItem(it.id, c.checked); regen(); refreshCounts(); });
+  return el("div", { class: "row" + (it.risk ? " risk" : "") + (dis ? " dis" : ""), "data-id": it.id }, c,
+    el("div", { class: "t" }, el("label", { for: id, text: loc(it, "label") }), it.sub ? el("span", { class: "s", text: it.sub }) : null, it.risk ? el("span", { class: "r", text: loc(it, "risk") }) : null));
+}
+
+function groupCard(g, items, forceOpen) {
+  const all = groupItems(g);
+  const dis = depOff(g);
+  const open = forceOpen || (S.open[g.id] ?? all.length <= 8);
+  const card = el("div", { class: "card" + (open ? "" : " col"), "data-g": g.id });
+  const on = all.filter(i => isOn(i.id)).length;
+  const m = el("input", { type: "checkbox", title: t("Marcar/desmarcar todos"), "aria-label": t("Marcar ou desmarcar todos de {n}", { n: loc(g, "title") }) });
+  m.checked = on === all.length; m.indeterminate = on > 0 && on < all.length;
+  m.addEventListener("change", () => { for (const i of all) setItem(i.id, m.checked); regen(); render(true); });
+  const cv = document.createElementNS("http://www.w3.org/2000/svg", "svg"); cv.setAttribute("viewBox", "0 0 24 24"); cv.setAttribute("class", "chev"); cv.innerHTML = '<path d="m6 9 6 6 6-6"/>';
+  const toggle = () => { S.open[g.id] = card.classList.contains("col"); card.classList.toggle("col"); };
+  cv.addEventListener("click", toggle);
+  const hd = el("div", { class: "hd" }, m, el("div", { class: "tg", onclick: toggle }, el("h3", { text: loc(g, "title") }), el("div", { class: "d", text: loc(g, "desc") })), el("span", { class: "badge" + (on < all.length ? " w" : ""), "data-cnt": g.id, text: on + "/" + all.length }), cv);
+  const bd = el("div", { class: "bd" });
+  if (dis) bd.append(el("div", { class: "note w", text: t("Estes itens não terão efeito porque o item \"{n}\" está desligado.", { n: loc(S.byId[DEP[g.id]], "label") }) }));
+  const scopes = new Set(items.map(i => i.scope));
+  for (const sc of ["sys", "usr"]) {
+    const list = items.filter(i => i.scope === sc);
+    if (!list.length) continue;
+    if (scopes.size > 1) bd.append(el("div", { class: "sub", text: sc === "sys" ? t("Sistema (todos os usuários — HKLM)") : t("Usuário (primeiro logon — HKCU)") }));
+    for (const it of list) bd.append(itemRow(it, dis));
+  }
+  card.append(hd, bd);
+  return card;
+}
+
+function refreshCounts() {
+  for (const g of S.cat.groups) {
+    const all = groupItems(g), on = all.filter(i => isOn(i.id)).length;
+    const b = $('[data-cnt="' + g.id + '"]'); if (b) { b.textContent = on + "/" + all.length; b.className = "badge" + (on < all.length ? " w" : ""); }
+    const m = b && b.parentNode.querySelector("input[type=checkbox]"); if (m) { m.checked = on === all.length; m.indeterminate = on > 0 && on < all.length; }
+  }
+  renderNav();
+  const need = [...document.querySelectorAll("[data-g]")].some(c => { const g = S.cat.groups.find(x => x.id === c.dataset.g); return !!c.querySelector(".note.w") !== !!depOff(g); });
+  if (need) render(true);
+}
+
+function renderItems(tabs) {
+  const w = $("#wrap");
+  const q = S.q.trim().toLowerCase();
+  if (q) w.append(el("h2", { text: t("Resultados da busca") }));
+  else {
+    const T = S.cat.tabs.find(x => x.id === tabs[0]); w.append(el("h2", { text: loc(T, "title") }));
+    const lead = { apps: "O que será removido do Windows durante a instalação.", power: "Plano de energia personalizado para desempenho.", perf: "Ajustes de desempenho, serviços e tarefas agendadas.", priv: "Telemetria, privacidade, segurança e atualizações.", ui: "Aparência do Explorador, Menu Iniciar e barra de tarefas.", user: "Ajustes aplicados ao perfil do usuário no primeiro logon." }[tabs[0]];
+    w.append(el("p", { class: "lead", text: t(lead) + " " + t("Marcado = será aplicado. Desmarque o que você NÃO quer aplicar.") }));
+  }
+  if (!S.o.runScript) w.append(el("div", { class: "note w", text: t("O script de ajustes está desligado na aba Instalação — nada desta página será aplicado.") }));
+  const sv = document.createElementNS("http://www.w3.org/2000/svg", "svg"); sv.setAttribute("viewBox", "0 0 24 24"); sv.innerHTML = '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>';
+  const qi = el("input", { type: "search", id: "q", placeholder: t("Buscar em todos os ajustes (ex.: telemetria, Xbox, OneDrive, UAC…)"), value: S.q, "aria-label": t("Buscar ajustes") });
+  qi.addEventListener("input", () => { S.q = qi.value; const p = qi.selectionStart; render(true); const n = $("#q"); n.focus(); n.setSelectionRange(p, p); });
+  w.append(el("div", { class: "search" }, sv, qi));
+  let shown = 0;
+  for (const g of S.cat.groups) {
+    if (!q && !tabs.includes(g.tab)) continue;
+    if (q && !ITEM_TABS.includes(g.tab)) continue;
+    let items = groupItems(g);
+    if (q) items = items.filter(i => (loc(i, "label") + " " + i.label + " " + (i.sub || "") + " " + (loc(i, "risk") || "") + " " + loc(g, "title")).toLowerCase().includes(q));
+    if (!items.length) continue;
+    shown++;
+    w.append(groupCard(g, items, !!q));
+  }
+  if (!shown) w.append(el("div", { class: "note", text: t("Nada encontrado.") }));
+}
+
+// ------------------------------------------------------------ aba Pós-instalação (winget & chocolatey)
+function postBool(k, label, hint) {
+  const id = "p_" + k, c = el("input", { type: "checkbox", id, checked: !!S.o[k] });
+  c.addEventListener("change", () => { S.o[k] = c.checked; regen(); render(true); });
+  return el("div", { class: "chk" }, c, el("div", null, el("label", { for: id, text: t(label) }), hint ? el("span", { class: "h", text: t(hint) }) : null));
+}
+
+function renderPost() {
+  const w = $("#wrap"), o = S.o;
+  const T = S.cat.tabs.find(x => x.id === "post");
+  w.append(el("h2", { text: loc(T, "title") }), el("p", { class: "lead", text: t("Cria na área de trabalho o arquivo Pos-instalacao.bat para instalação automática de programas via Winget e Chocolatey (precisa de internet).") }));
+
+  const bd = el("div", { class: "bd" });
+  bd.append(postBool("postEnabled", "Criar o script de pós-instalação na área de trabalho", "Fica na área de trabalho de todos os usuários (C:\\Users\\Public\\Desktop)."));
+  bd.append(postBool("postAutoRun", "Executar o script sozinho no primeiro logon", "O script roda automaticamente no primeiro logon do usuário."));
+  bd.append(postBool("postDelete", "Apagar o script da área de trabalho quando tudo for instalado"));
+  bd.append(el("div", { class: "note", text: t("Precisa de internet. Os programas selecionados serão instalados silenciosamente.") }));
+  w.append(el("div", { class: "card" }, el("div", { class: "hd" }, el("div", { class: "tg" }, el("h3", { text: t("Configurações do script" ) }))), bd));
+
+  // Card WINGET
+  const taWinget = el("textarea", { id: "p_winget", placeholder: "Google.Chrome\n7zip.7zip\nVideoLAN.VLC\nNotepad++.Notepad++\n# Digite um ID por linha", spellcheck: "false", style: "min-height: 140px;" });
+  taWinget.value = o.postWingetCustom !== undefined ? o.postWingetCustom : (o.postCustom || "");
+  taWinget.addEventListener("input", () => {
+    o.postWingetCustom = taWinget.value;
+    o.postCustom = taWinget.value;
+    regen();
+  });
+
+  const cardWinget = el("div", { class: "card" },
+    el("div", { class: "hd" },
+      el("div", { class: "tg" },
+        el("h3", { text: "Winget" }),
+        el("div", { class: "d", text: t("Adicione aqui sua lista para instalação via WINGET") })
+      )
+    ),
+    el("div", { class: "bd" },
+      el("div", { class: "fgrid" },
+        el("div", { class: "f full" },
+          el("label", { class: "k", for: "p_winget", text: t("IDs do winget, um por linha (use # para comentários)") }),
+          taWinget,
+          el("div", { class: "h", text: t("Para achar o ID de um programa, abra o Terminal e digite: winget search nome-do-programa") })
+        )
+      )
+    )
+  );
+  w.append(cardWinget);
+
+  // Card CHOCOLATEY
+  const taChoco = el("textarea", { id: "p_choco", placeholder: "googlechrome\n7zip\nvlc\nnotepadplusplus\n# Digite um pacote por linha", spellcheck: "false", style: "min-height: 140px;" });
+  taChoco.value = o.postChocoCustom || "";
+  taChoco.addEventListener("input", () => {
+    o.postChocoCustom = taChoco.value;
+    regen();
+  });
+
+  const bdChoco = el("div", { class: "bd" });
+  bdChoco.append(postBool("postChocoEnabled", "Instalar o Chocolatey", "Instala o gerenciador de pacotes Chocolatey automaticamente na máquina."));
+  bdChoco.append(el("div", { class: "fgrid", style: "margin-top: 12px;" },
+    el("div", { class: "f full" },
+      el("label", { class: "k", for: "p_choco", text: t("Pacotes do Chocolatey, um por linha (use # para comentários)") }),
+      taChoco,
+      el("div", { class: "h", text: t("Exemplos: googlechrome, 7zip, vlc, git, vscode, python. Consulte: community.chocolatey.org/packages") })
+    )
+  ));
+
+  const cardChoco = el("div", { class: "card" },
+    el("div", { class: "hd" },
+      el("div", { class: "tg" },
+        el("h3", { text: "Chocolatey" }),
+        el("div", { class: "d", text: t("Adicione aqui sua lista para instalação via Chocolatey") })
+      )
+    ),
+    bdChoco
+  );
+  w.append(cardChoco);
+}
+
+function render(keepScroll) {
+  const sc = $("#content").scrollTop;
+  $("#wrap").textContent = "";
+  renderNav();
+  if (S.q) renderItems(ITEM_TABS);
+  else if (S.tab === "post") renderPost();
+  else if (FIELDS[S.tab]) renderFields(S.tab);
+  else renderItems([S.tab]);
+  if (keepScroll) $("#content").scrollTop = sc;
+}
+
+// ------------------------------------------------------------ geração
+let gT = 0, gSeq = 0;
+function regen() { clearTimeout(gT); gT = setTimeout(doGen, 350); }
+async function doGen() {
+  const seq = ++gSeq;
+  const r = await api("/api/generate", Object.assign({}, S.o, { lang: LANG === "pt" ? "pt-BR" : LANG }));
+  if (seq !== gSeq) return null;
+  const st1 = $("#st1"), st2 = $("#st2"), stw = $("#stw");
+  if (!r.ok) {
+    S.res = null; st1.textContent = t("Erro"); st1.className = "chip bad"; st2.textContent = (r.data && r.data.error) || t("Falha ao gerar");
+    stw.classList.add("hide"); return null;
+  }
+  S.res = r.data;
+  const s = r.data.stats;
+  st1.className = "chip"; st1.textContent = s.hasScript ? t("{a} de {b} ajustes ativos", { a: s.itemsOn, b: s.itemsTotal }) : t("Sem script de ajustes");
+  st2.textContent = (s.bytes / 1024).toFixed(0) + " KB" + (s.hasScript ? " · " + t("{n} linhas de script", { n: s.scriptLines }) : "");
+  const W = r.data.warnings || []; r.data.warnings = W;
+  if (W.length) { stw.classList.remove("hide"); stw.textContent = t(W.length > 1 ? "⚠ {n} avisos" : "⚠ {n} aviso", { n: W.length }); } else stw.classList.add("hide");
+  return r.data;
+}
+
+function toast(msg, err, action) {
+  const tt = $("#toast"); tt.textContent = ""; tt.className = "toast on" + (err ? " err" : "");
+  tt.append(msg); if (action) tt.append(el("a", { text: action.text, onclick: action.fn }));
+  clearTimeout(toast.t); toast.t = setTimeout(() => tt.classList.remove("on"), err ? 9000 : 7000);
+}
+
+function blobDownload(name, text, mime) {
+  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: mime || "application/octet-stream" })), download: name });
+  document.body.append(a); a.click(); a.remove();
+}
+
+async function saveFile(kind, name, content) {
+  const r = await api("/api/save", { kind, name, content });
+  if (r.status === 501) { blobDownload(name, content, kind === "xml" ? "application/xml" : "application/json"); toast(t("Arquivo enviado para a pasta de downloads do navegador.")); return; }
+  if (!r.ok) { toast((r.data && r.data.error) || t("Falha ao salvar"), true); return; }
+  if (r.data.cancelled) return;
+  toast(t("Salvo em {p}", { p: r.data.path }) + "  ", false, { text: t("Mostrar na pasta"), fn: () => api("/api/reveal", { path: r.data.path }) });
+}
+
+async function generateNow() {
+  clearTimeout(gT);
+  const d = await doGen();
+  if (!d) { toast($("#st2").textContent || t("Não foi possível gerar o XML"), true); return null; }
+  return d;
+}
+
+function showWarnings(list, confirm) {
+  const ul = $("#wlist"); ul.textContent = ""; list.forEach(x => ul.append(el("li", { text: x })));
+  const m = $("#mwarn"); m.classList.add("on");
+  $("#wyes").classList.toggle("hide", !confirm);
+  $("#wno").textContent = confirm ? t("Voltar") : t("Fechar");
+  return new Promise(res => { $("#wyes").onclick = () => { m.classList.remove("on"); res(true); }; $("#wno").onclick = () => { m.classList.remove("on"); res(false); }; });
+}
+
+async function saveXML() {
+  if (S.saving) return; S.saving = true;
+  try {
+    const d = await generateNow(); if (!d) return;
+    if (d.warnings.length && !(await showWarnings(d.warnings, true))) return;
+    await saveFile("xml", "autounattend.xml", d.xml);
+  } finally { S.saving = false; }
+}
+
+async function copyText(tx) {
+  try { await navigator.clipboard.writeText(tx); return true; } catch (e) {}
+  const ta = el("textarea", { style: "position:fixed;opacity:0" }); ta.value = tx; document.body.append(ta); ta.select();
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.remove(); return ok;
+}
+
+function askWipe(done) {
+  const m = $("#mwipe"), i = $("#wipein"), y = $("#wipeyes");
+  i.value = ""; y.disabled = true; m.classList.add("on"); i.focus();
+  i.oninput = () => { y.disabled = i.value.trim().toUpperCase() !== t("APAGAR"); };
+  $("#wipeno").onclick = () => { m.classList.remove("on"); render(true); };
+  y.onclick = () => { m.classList.remove("on"); done(); };
+}
+
+// ------------------------------------------------------------ perfis
+function cleanProfile() { const o = JSON.parse(JSON.stringify(S.o)); const it = {}; for (const [k, v] of Object.entries(o.items || {})) if (v === false && S.byId[k]) it[k] = false; o.items = it; delete o.lang; return o; }
+function applyProfile(p) {
+  const o = JSON.parse(JSON.stringify(S.def));
+  for (const k of Object.keys(o)) if (k !== "items" && k in p && typeof p[k] === typeof o[k]) o[k] = p[k];
+  o.items = {}; if (p.items && typeof p.items === "object") for (const [k, v] of Object.entries(p.items)) if (v === false && S.byId[k]) o.items[k] = false;
+  S.o = o; render(); regen();
+}
+function preset(n) {
+  const o = S.o;
+  if (n === "full") { o.items = {}; o.runScript = true; }
+  else if (n === "safe") { o.runScript = true; o.items = {}; for (const id of S.cat.presets.conservador.off) if (S.byId[id]) o.items[id] = false; }
+  else if (n === "setup") { o.runScript = false; }
+  render(); regen();
+}
+
+function setLang(l) {
+  LANG = l; store("ga.lang", l); applyStatic(); if (S.cat) { render(true); doGen(); }
+}
+
+// ------------------------------------------------------------ início
+async function init() {
+  const nl = (navigator.language || "pt").toLowerCase();
+  LANG = load("ga.lang") || (nl.startsWith("es") ? "es" : nl.startsWith("en") ? "en" : "pt");
+  if (!["pt", "en", "es"].includes(LANG)) LANG = "pt";
+  THEME = load("ga.theme") || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  applyTheme(); applyStatic();
+
+  const r = await api("/api/init");
+  if (!r.ok) { $("#wrap").textContent = t("Não foi possível iniciar a interface."); return; }
+  const d = r.data;
+  S.cat = d.catalog; S.def = d.defaults; S.o = JSON.parse(JSON.stringify(d.defaults)); S.o.items = S.o.items || {};
+  S.locales = d.locales; S.tz = d.timezones; S.winget = d.winget || [];
+  for (const i of S.cat.items) S.byId[i.id] = i;
+  const verEl = $("#ver"); if (verEl) verEl.textContent = "v" + d.version;
+  render(); doGen();
+
+  setInterval(() => api("/api/ping"), 3000);
+  addEventListener("pagehide", () => { api("/api/bye", {}, true); });
+  $("#lang").addEventListener("change", e => setLang(e.target.value));
+  $("#theme").addEventListener("click", () => { THEME = THEME === "dark" ? "light" : "dark"; store("ga.theme", THEME); applyTheme(); });
+  $("#preset").addEventListener("change", e => { const v = e.target.value; e.target.value = ""; if (v) preset(v); });
+  $("#pbtn").addEventListener("click", e => { e.stopPropagation(); $("#pmenu").classList.toggle("on"); });
+  document.addEventListener("click", () => $("#pmenu").classList.remove("on"));
+  $("#psave").addEventListener("click", () => saveFile("profile", "perfil-autounattend.json", JSON.stringify(cleanProfile(), null, 2)));
+  $("#pload").addEventListener("click", async () => {
+    const r = await api("/api/open");
+    if (r.status === 501) { const f = el("input", { type: "file", accept: ".json,application/json" }); f.onchange = async () => { if (f.files[0]) { try { applyProfile(JSON.parse(await f.files[0].text())); toast(t("Configuração carregada.")); } catch (e) { toast(t("Arquivo de perfil inválido."), true); } } }; f.click(); return; }
+    if (!r.ok) { toast((r.data && r.data.error) || t("Falha ao abrir"), true); return; }
+    if (r.data.cancelled) return;
+    try { applyProfile(JSON.parse(r.data.content)); toast(t("Configuração carregada.")); } catch (e) { toast(t("Arquivo de perfil inválido."), true); }
+  });
+  $("#bsave").addEventListener("click", saveXML);
+  $("#psave2").addEventListener("click", () => { $("#mprev").classList.remove("on"); saveXML(); });
+  $("#bcopy").addEventListener("click", async () => { const d = await generateNow(); if (d) toast((await copyText(d.xml)) ? t("XML copiado para a área de transferência.") : t("Não foi possível copiar.")); });
+  $("#pcopy").addEventListener("click", async () => { if (S.res) toast((await copyText(S.res.xml)) ? t("XML copiado.") : t("Não foi possível copiar.")); });
+  $("#bprev").addEventListener("click", async () => { const d = await generateNow(); if (!d) return; $("#pre").textContent = d.xml; $("#pinfo").textContent = (d.stats.bytes / 1024).toFixed(0) + " KB"; $("#mprev").classList.add("on"); });
+  $("#pclose").addEventListener("click", () => $("#mprev").classList.remove("on"));
+  $("#stw").addEventListener("click", () => { if (S.res) showWarnings(S.res.warnings, false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".modal.on").forEach(m => { if (m.id !== "mwipe") m.classList.remove("on"); }); });
+  $("#quit").addEventListener("click", async () => {
+    await api("/api/quit");
+    document.body.innerHTML = '<div style="margin:20vh auto;text-align:center;font:18px Segoe UI,sans-serif;color:#16324f;background:#fff;padding:30px;border-radius:12px;max-width:520px"></div>';
+    document.body.firstChild.textContent = t("Programa encerrado. Você já pode fechar esta janela.");
+    document.body.style.overflow = "auto";
+    setTimeout(() => window.close(), 300);
+  });
+}
+init();
+</script>
+</body>
+</html>
