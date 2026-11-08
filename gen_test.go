@@ -188,3 +188,42 @@ func TestChocolateyPostInstall(t *testing.T) {
 		t.Errorf("falta pacote Winget Google.Chrome")
 	}
 }
+
+func TestXMLWellFormedWithAllFeatures(t *testing.T) {
+	if err := loadAssets(); err != nil {
+		t.Fatal(err)
+	}
+	o := DefaultOptions()
+	o.CreateUser = true
+	o.UserAccounts = []UserAccount{
+		{Name: "Marco", DisplayName: "Marco", Password: "site@1989", Group: "Administrators"},
+		{Name: "Usuario", DisplayName: "Usuario", Password: "", Group: "Users"},
+	}
+	o.AutoLogon = true
+	o.AutoLogonUser = "Marco"
+	o.AutoLogonN = 1
+	o.WallpaperEnabled = true
+	o.WallpaperURL = "https://marcovivas.com/docs/DEV9.png"
+	o.PostEnabled = true
+	o.PostAutoRun = true
+	o.PostChocoEnabled = true
+	o.PostChocoCustom = "googlechrome\n7zip"
+	o.PostWingetCustom = "Google.Chrome\nVideoLAN.VLC"
+	o.FirstLogonCmds = "echo 1 & echo 2"
+
+	r, err := Generate(o)
+	if err != nil {
+		t.Fatalf("falha ao gerar XML completo: %v", err)
+	}
+
+	// Verifica se a substituição de & por &amp; ocorreu nos elementos CommandLine
+	if strings.Contains(r.XML, `<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { $b = & '`) {
+		t.Errorf("encontrado & sem escape no elemento CommandLine do wallpaper!")
+	}
+	if !strings.Contains(r.XML, `<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { $b = &amp; '`) {
+		t.Errorf("falta &amp; escapado no elemento CommandLine do wallpaper!")
+	}
+	if !strings.Contains(r.XML, "<CommandLine>echo 1 &amp; echo 2</CommandLine>") {
+		t.Errorf("falta &amp; escapado no FirstLogonCmds!")
+	}
+}

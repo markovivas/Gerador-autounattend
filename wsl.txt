@@ -1,0 +1,53 @@
+# =====================================================
+# Preparacao do Windows para Docker Desktop + WSL 2
+# Execute como Administrador
+# =====================================================
+
+# Verificar privilegios administrativos
+$isAdmin = ([Security.Principal.WindowsPrincipal] `
+    [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    Write-Host "ERRO: Execute este script como Administrador." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host ""
+Write-Host "=== Habilitando recursos do Windows ===" -ForegroundColor Cyan
+
+dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+
+dism /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+Write-Host ""
+Write-Host "=== Configurando Hypervisor ===" -ForegroundColor Cyan
+
+bcdedit /set hypervisorlaunchtype auto
+
+Write-Host ""
+Write-Host "=== Instalando/Atualizando WSL ===" -ForegroundColor Cyan
+
+wsl --install --no-distribution
+wsl --update
+
+Write-Host ""
+Write-Host "=== Definindo WSL 2 como padrao ===" -ForegroundColor Cyan
+
+wsl --set-default-version 2
+
+Write-Host ""
+Write-Host "=== Informacoes do WSL ===" -ForegroundColor Cyan
+
+wsl --status
+wsl --version
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "Configuracao concluida." -ForegroundColor Green
+Write-Host ""
+Write-Host "IMPORTANTE:" -ForegroundColor Yellow
+Write-Host "1. Reinicie o computador."
+Write-Host "2. Instale o Docker Desktop."
+Write-Host "3. Verifique se a virtualizacao esta habilitada na BIOS/UEFI."
+Write-Host "========================================" -ForegroundColor Green

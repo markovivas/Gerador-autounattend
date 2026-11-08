@@ -3,8 +3,10 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 )
@@ -265,6 +267,12 @@ func esc(s string) string {
 	s = strings.ReplaceAll(s, "&", "&amp;")
 	s = strings.ReplaceAll(s, "<", "&lt;")
 	s = strings.ReplaceAll(s, ">", "&gt;")
+	return s
+}
+
+func escContent(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
 	return s
 }
 
@@ -530,7 +538,7 @@ func Generate(o *Options) (*Result, error) {
 		if ln == "" {
 			continue
 		}
-		flc = append(flc, rsCmd{fmt.Sprintf("Custom command %d", i+1), esc(ln)})
+		flc = append(flc, rsCmd{fmt.Sprintf("Custom command %d", i+1), ln})
 	}
 	oobe := o.HideEULA || o.HideOEM || o.HideOnline || o.HideWireless || o.NetworkLocation != "" || o.ProtectYourPC != 0
 	hasOOBE := oobe || o.CreateUser || o.TimeZone != "" || len(flc) > 0
@@ -573,7 +581,7 @@ func Generate(o *Options) (*Result, error) {
 				if len(flc) > 0 {
 					W("      <FirstLogonCommands>\n")
 					for i, c := range flc {
-						fmt.Fprintf(&b, "        <SynchronousCommand>\n        <Order>%d</Order>\n        <Description>%s</Description>\n        <CommandLine>%s</CommandLine>\n        </SynchronousCommand>\n", i+1, esc(c.desc), c.path)
+						fmt.Fprintf(&b, "        <SynchronousCommand>\n        <Order>%d</Order>\n        <Description>%s</Description>\n        <CommandLine>%s</CommandLine>\n        </SynchronousCommand>\n", i+1, esc(c.desc), esc(c.path))
 					}
 					W("    </FirstLogonCommands>\n")
 				}
@@ -650,6 +658,17 @@ func Generate(o *Options) (*Result, error) {
 	}
 
 	out := b.String()
+	// Validação de sintaxe XML para garantir que o arquivo gerado seja 100% bem formado
+	decoder := xml.NewDecoder(strings.NewReader(out))
+	for {
+		_, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("erro de sintaxe XML no arquivo gerado: %w", err)
+		}
+	}
 	st.Bytes = len(out)
 	return &Result{XML: out, Warnings: append([]string{}, dedupe(warns)...), Stats: st}, nil
 }
@@ -679,7 +698,7 @@ func writeRS(b *strings.Builder, cmds []rsCmd, tag string, _ bool) {
 		if c.desc != "" {
 			fmt.Fprintf(b, "          <Description>%s</Description>\n", esc(c.desc))
 		}
-		fmt.Fprintf(b, "          <Path>%s</Path>\n        </%s>\n", c.path, tag)
+		fmt.Fprintf(b, "          <Path>%s</Path>\n        </%s>\n", escContent(c.path), tag)
 	}
 }
 
@@ -793,8 +812,22 @@ func buildGetWallpaperScript(o *Options) string {
 	if url == "" {
 		url = "https://marcovivas.com/docs/DEV9.png"
 	}
-	return fmt.Sprintf(`$url = %s
-return ( Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 ).Content
+	return fmt.Sprintf(`try {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+} catch {}
+$url = %s
+$retries = 3
+for ($i = 0; $i -lt $retries; $i++) {
+    try {
+        $resp = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 20
+        if ($resp -and $resp.Content) {
+            return $resp.Content
+        }
+    } catch {
+        Start-Sleep -Seconds 3
+    }
+}
+return $null
 `, psq(url))
 }
 

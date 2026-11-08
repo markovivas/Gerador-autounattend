@@ -1,0 +1,13 @@
+# Lista de pacotes para instalação via Chocolatey
+# Um pacote por linha. Linhas iniciadas com # são comentários.
+
+composer
+droidcam-obs-plugin
+dotnet
+haroopad
+obs-move-transition
+opencode
+opencode-desktop
+vcredist-all
+wget
+ampcast
