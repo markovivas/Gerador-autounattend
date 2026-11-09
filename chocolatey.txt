@@ -1,13 +1,53 @@
 # Lista de pacotes para instalação via Chocolatey
 # Um pacote por linha. Linhas iniciadas com # são comentários.
 
+### BÁSICOS / ESSENCIAIS
+7zip
+vlc
+firefox
+onlyoffice
+powertoys
+vcredist-all
+thunderbird
+sysinternals
+
+### T.I TECNOLIGIA DA INFORMACAO
 composer
-droidcam-obs-plugin
-dotnet
+curl
+crystaldiskinfo
+dbeaver
 haroopad
-obs-move-transition
+everything
+git
+github-desktop
+hwinfo
+ctrl-v-terminal
+microsoft-windows-terminal
+nodejs-lts
+notepadplusplus
+jq
+python3
+rustdesk
+vscode
+wget
+powershell-core
+docker-desktop
+
+
+### IA
+antigravity
 opencode
 opencode-desktop
-vcredist-all
-wget
-ampcast
+
+### EDIÇÃO DE VÍDEO 
+lossless-cut
+obs-studio
+obs-move-transition
+droidcam-obs-plugin
+
+
+### REMOVIDOS
+# keepass
+# openssh
+# cpu-z
+# dotnet
