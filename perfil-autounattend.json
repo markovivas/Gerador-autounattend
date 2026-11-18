@@ -60,7 +60,6 @@
     "usr-theme-appsuselighttheme": false,
     "usr-theme-systemuseslighttheme": false,
     "usr-theme-enabletransparency": false,
-    "usr-wallpaper": false,
     "usr-perf-userpreferencesmask-6": false,
     "usr-explorer-iconsonly": false,
     "script-edge": false,
@@ -73,7 +72,15 @@
     "sys-services-start-28": false,
     "sys-privacy-fallowtogethelp": false,
     "sys-privacy-blockaadworkplacejoin": false,
-    "usr-privacy-blockaadworkplacejoin": false
+    "usr-privacy-blockaadworkplacejoin": false,
+    "pkg-microsoft-windowscamera": false,
+    "pkg-microsoft-windows-photos": false,
+    "sys-privacy-consentpromptbehavioradmin": false,
+    "sys-privacy-promptonsecuredesktop": false,
+    "sys-privacy-preventdeviceencryption": false,
+    "sys-privacy-maintenancedisabled": false,
+    "sys-privacy-disablelockworkstation": false,
+    "sys-wupdate-deferfeatureupdatesperiodindays": false
   },
   "userAccounts": [
     {
